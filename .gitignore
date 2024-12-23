@@ -1,0 +1,5 @@
+.venv
+.env
+frontend/.env
+backend/.venv
+backend/.env
