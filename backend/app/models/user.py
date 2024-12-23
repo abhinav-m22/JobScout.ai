@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, Integer, String, Text, Float, Boolean
+from sqlalchemy import Column, Integer, String, Text, Float, Boolean, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -27,3 +27,10 @@ class UserProfile(Base):
     linkedin = Column(String, nullable=True)
     portfolio = Column(String, nullable=True)
     resume_link = Column(String, nullable=True)
+
+class UserRecommendations(Base):
+    __tablename__ = "user_recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, nullable=False)  # Assume user_id is a string
+    recommendations = Column(ARRAY(String), nullable=False)  
