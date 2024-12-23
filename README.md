@@ -1,0 +1,1 @@
+# JobScout.ai
