@@ -9,9 +9,10 @@ import { Loader2 } from 'lucide-react'
 interface RegisterFormProps {
   onSuccess: () => void
   switchToLogin: () => void
+  defaultEmail?: string
 }
 
-export function RegisterForm({ onSuccess, switchToLogin }: RegisterFormProps) {
+export function RegisterForm({ onSuccess, switchToLogin, defaultEmail= "" }: RegisterFormProps) {
   const { register } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -54,6 +55,7 @@ export function RegisterForm({ onSuccess, switchToLogin }: RegisterFormProps) {
           placeholder="Email"
           required
           disabled={isLoading}
+          defaultValue={defaultEmail}
         />
         <Input
           id="password"

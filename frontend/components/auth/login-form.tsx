@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input"
 import { useAuth } from "@/lib/auth-context"
 import { Loader2 } from 'lucide-react'
 
+interface RegisterFormProps {
+  onSuccess: () => void
+  switchToLogin: () => void
+  defaultEmail?: string
+}
+
+
 interface LoginFormProps {
   onSuccess: () => void
   switchToRegister: () => void

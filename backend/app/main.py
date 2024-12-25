@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends
-from app.routers import users, ai
+from app.routers import users, ai, snapshot
 from fastapi.background import BackgroundTasks
 from app.tasks import process_job_roles
 from fastapi import Depends
@@ -26,6 +26,7 @@ app.add_middleware(
 
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(ai.router, prefix="/ai", tags=["AI"])
+app.include_router(snapshot.router, prefix="/snapshots", tags=["Snapshots"])
 
 # Root endpoint
 @app.get("/")
@@ -40,6 +41,7 @@ class JobRequest(BaseModel):
     roles: List[str]
     location: str
     additional_details: Dict
+    user_id: str
 
 @app.post("/process-jobs")
 async def process_jobs(request: JobRequest, db: Session = Depends(get_db)):
@@ -47,6 +49,7 @@ async def process_jobs(request: JobRequest, db: Session = Depends(get_db)):
     results = await manager.process_job_roles(
         roles=request.roles,
         location=request.location,
-        additional_details=request.additional_details
+        additional_details=request.additional_details,
+        user_id=request.user_id
     )
     return {"results": results}

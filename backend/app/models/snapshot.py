@@ -12,3 +12,4 @@ class Snapshot(Base):
     snapshot_id = Column(String, nullable=False, unique=True)
     payload = Column(JSON, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    user_id = Column(String, nullable=True, default="1")

@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
 import logging
 import time
@@ -8,6 +8,8 @@ from app.db import get_db
 import requests
 import os
 from sqlalchemy.dialects.postgresql import JSONB
+import boto3
+from botocore.exceptions import ClientError
 
 API_TOKEN = os.getenv("BRIGHTDATA_API_TOKEN")
 
@@ -20,6 +22,8 @@ HEADERS = {
     "Content-Type": "application/json",
 }
 
+router = APIRouter()
+
 class SnapshotManager:
     
     def __init__(self, db: Session = Depends(get_db)):
@@ -28,7 +32,7 @@ class SnapshotManager:
         self.api_token = API_TOKEN
         self.s3_bucket = os.getenv("S3_BUCKET")
         
-    def create_snapshot(self, url: str, role: str, platform: str, payload: Dict) -> str:
+    def create_snapshot(self, url: str, role: str, platform: str, payload: Dict, user_id: str) -> str:
         try:
             db = next(get_db())
             # response = requests.post(url, json=payload, headers=HEADERS)
@@ -40,6 +44,7 @@ class SnapshotManager:
             #     platform=platform,
             #     snapshot_id=snapshot_id,
             #     payload=payload
+            #    user_id=user_id
             # )
             
             # db.add(snapshot)  # This should now work, as `db` is the actual Session
@@ -77,7 +82,8 @@ class SnapshotManager:
         self,
         roles: List[str],
         location: str,
-        additional_details: Dict
+        additional_details: Dict,
+        user_id: str
     ) -> List[Dict]:
         results = []
         
@@ -113,6 +119,17 @@ class SnapshotManager:
                         )
                         print(f"existing_snapshot_id: {existing_snapshot_id} for {platform} ({role})")
                         if existing_snapshot_id:
+                            db = next(get_db())
+                            snapshot = Snapshot(
+                                role=role,
+                                platform=platform,
+                                snapshot_id=existing_snapshot_id,
+                                payload=payload,
+                                user_id=user_id
+                            )
+                            db.add(snapshot)
+                            db.commit()
+                            db.refresh(snapshot)
                             platform_results[platform] = {
                                 "snapshot_id": existing_snapshot_id,
                                 "status": "existing_snapshot_used"
@@ -125,7 +142,7 @@ class SnapshotManager:
                             INDEED_URL
                         )
                         
-                        snapshot_id = self.create_snapshot(url, role, platform, payload)
+                        snapshot_id = self.create_snapshot(url, role, platform, payload, user_id)
                         
                         snapshot_data = await self.wait_for_snapshot(
                             snapshot_id, platform, role
@@ -249,3 +266,76 @@ class SnapshotManager:
             "status": "error",
             "error": error_message
         }
+        
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_KEY")
+)
+
+def generate_signed_url(bucket: str, key: str, expiration: int = 3600) -> str:
+    """
+    Generate a signed URL for accessing S3 objects.
+
+    Args:
+        bucket (str): The S3 bucket name.
+        key (str): The S3 object key.
+        expiration (int): Expiration time in seconds.
+
+    Returns:
+        str: The signed URL for the S3 object.
+    """
+    try:
+        url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": key},
+            ExpiresIn=expiration,
+        )
+        return url
+    except ClientError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate signed URL: {str(e)}")
+
+@router.get("/{user_id}")
+def get_snapshots(user_id: str, db: Session = Depends(get_db)) -> List[dict]:
+    """
+    Fetch snapshots for a user and return signed URLs for S3.
+
+    Args:
+        user_id (str): The ID of the user.
+        db (Session): The database session.
+
+    Returns:
+        List[dict]: List of snapshots with signed URLs.
+    """
+    snapshots = db.query(Snapshot).filter(Snapshot.user_id == user_id).all()
+    print(f"Snapshots: {snapshots}")
+    if not snapshots:
+        raise HTTPException(status_code=404, detail="No snapshots found for the user.")
+
+    s3_bucket = os.getenv("S3_BUCKET")
+    response = []
+
+    for snapshot in snapshots:
+        role_slug = snapshot.role.lower().replace(" ", "_")
+        platform_slug = snapshot.platform.lower()
+        s3_path = f"{platform_slug}/{role_slug}/{snapshot.snapshot_id}.json"
+
+        try:
+            signed_url = generate_signed_url(s3_bucket, s3_path)
+            response.append({
+                "snapshot_id": snapshot.snapshot_id,
+                "role": snapshot.role,
+                "platform": snapshot.platform,
+                "created_at": snapshot.created_at,
+                "s3_signed_url": signed_url,
+            })
+        except HTTPException as e:
+            response.append({
+                "snapshot_id": snapshot.snapshot_id,
+                "role": snapshot.role,
+                "platform": snapshot.platform,
+                "created_at": snapshot.created_at,
+                "error": str(e.detail),
+            })
+
+    return response

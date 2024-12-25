@@ -9,9 +9,10 @@ interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
   defaultView?: "login" | "register"
+  defaultEmail?: string
 }
 
-export function AuthModal({ isOpen, onClose, defaultView = "login" }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, defaultView = "login", defaultEmail = "" }: AuthModalProps) {
   const [view, setView] = useState<"login" | "register">(defaultView)
 
   return (
@@ -25,10 +26,9 @@ export function AuthModal({ isOpen, onClose, defaultView = "login" }: AuthModalP
         {view === "login" ? (
           <LoginForm onSuccess={onClose} switchToRegister={() => setView("register")} />
         ) : (
-          <RegisterForm onSuccess={onClose} switchToLogin={() => setView("login")} />
+          <RegisterForm onSuccess={onClose} switchToLogin={() => setView("login")} defaultEmail={defaultEmail} />
         )}
       </DialogContent>
     </Dialog>
   )
 }
-
