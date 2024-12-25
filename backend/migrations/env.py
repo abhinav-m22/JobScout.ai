@@ -26,10 +26,11 @@ fileConfig(config.config_file_name)
 
 # Import your models here for 'autogenerate' support
 from app.models import user  # Replace with your actual models import
+from app.models import snapshot
 
 # Add your model's MetaData object here for 'autogenerate' support
 # target_metadata = Base.metadata
-target_metadata = user.Base.metadata
+target_metadata = [user.Base.metadata, snapshot.Base.metadata]
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode."""

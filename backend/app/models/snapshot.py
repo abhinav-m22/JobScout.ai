@@ -1,0 +1,14 @@
+# app/models.py
+from sqlalchemy import Column, String, Integer, JSON, DateTime
+from app.db import Base
+from datetime import datetime
+
+class Snapshot(Base):
+    __tablename__ = "snapshots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    role = Column(String, nullable=False) 
+    platform = Column(String, nullable=False)
+    snapshot_id = Column(String, nullable=False, unique=True)
+    payload = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
