@@ -1,16 +1,27 @@
-import { BrainCircuit, Globe2, Bot, LineChart, MessageSquareText, BarChart3, Sparkles, Search, Brain } from 'lucide-react'
+"use client"
+
+import { useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { AuthModal } from "@/components/auth/auth-modal"
+import { BrainCircuit, Globe2, Bot, LineChart, MessageSquareText, BarChart3, Sparkles, Search } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FeatureCard } from "@/components/feature-card"
 import { StatCard } from "@/components/stat-card"
 import { ChatMessage } from "@/components/chat-message"
-import { FeaturesSection } from '@/components/features-section'
-import { motion } from "motion/react"
 
 export default function LandingPage() {
+  const { user, logout, isLoading } = useAuth()
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authView, setAuthView] = useState<"login" | "register">("login")
+
+  const openModal = (view: "login" | "register") => {
+    setAuthView(view)
+    setShowAuthModal(true)
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-100 via-white to-fuchsia-100 dark:from-gray-900 dark:via-gray-900 dark:to-violet-900/20">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm transition-colors dark:border-gray-800 dark:bg-gray-900/80">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2 animate-slide-in">
@@ -18,12 +29,36 @@ export default function LandingPage() {
             <span className="text-xl font-bold">JobScout.ai</span>
           </div>
           <div className="flex items-center gap-4 animate-slide-in [animation-delay:200ms]">
-            <Button variant="ghost" className="hover:bg-violet-500/10 hover:text-violet-600">
-              Log in
-            </Button>
-            <Button className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700">
-              Get Started
-            </Button>
+            {isLoading ? (
+              <div className="h-10 w-20 animate-pulse rounded bg-gray-200" />
+            ) : user ? (
+              <>
+                <span className="text-sm text-gray-600">Welcome, {user.name}</span>
+                <Button
+                  variant="ghost"
+                  className="hover:bg-violet-500/10 hover:text-violet-600"
+                  onClick={() => logout()}
+                >
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="hover:bg-violet-500/10 hover:text-violet-600"
+                  onClick={() => openModal("login")}
+                >
+                  Log in
+                </Button>
+                <Button
+                  className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700"
+                  onClick={() => openModal("register")}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -48,7 +83,8 @@ export default function LandingPage() {
               </h1>
 
               <p className="animate-slide-in [animation-delay:200ms] mx-auto mb-8 max-w-2xl text-xl text-gray-600 dark:text-gray-300">
-              Simplify Job Hunting Real-Time Data, AI Insights, and Smart Career Assistant
+                Transform your job search with real-time insights, personalized recommendations, and
+                AI-driven career guidance.
               </p>
 
               <div className="animate-slide-in [animation-delay:400ms] mx-auto mb-12 flex max-w-md flex-col items-center gap-4 sm:flex-row">
@@ -60,49 +96,34 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   className="w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-all hover:from-violet-700 hover:to-fuchsia-700 sm:w-auto"
+                  onClick={() => openModal("register")}
                 >
                   Start Free Trial
                 </Button>
               </div>
             </div>
 
-            <div
-        className="text-center"
-      >
-        <h2 className="mb-4 text-3xl font-bold sm:text-4xl">Powerful Features</h2>
-        <p className="mb-12 text-lg text-muted-foreground">
-          Discover how JobScout.ai revolutionizes your job search experience
-        </p>
-      </div>
-
             {/* Features Grid */}
-            <div className="grid gap-8 md:grid-cols-4">
+            <div className="grid gap-8 md:grid-cols-3">
               <div className="animate-slide-in [animation-delay:200ms]">
                 <FeatureCard
                   icon={Globe2}
-                  title="Real-Time Job Data"
-                  description="Access the latest job listings from top platforms like LinkedIn, Glassdoor, and Indeed in real-time at one place."
+                  title="Real-Time Market Data"
+                  description="Stay updated with the latest job market trends and opportunities."
                 />
               </div>
               <div className="animate-slide-in [animation-delay:400ms]">
                 <FeatureCard
                   icon={Bot}
-                  title="AI-Powered Insights"
-                  description="Get personalized job recommendations and tailored resume tips powered by advanced AI."
-                />
-              </div>
-              <div className="animate-slide-in [animation-delay:600ms]">
-                <FeatureCard
-                  icon={Brain}
-                  title="Smart Career Assistant"
-                  description="Chat with our AI assistant for career guidance, job comparisons, and professional advice."
+                  title="AI Career Assistant"
+                  description="Get instant answers to your career questions from our AI chatbot."
                 />
               </div>
               <div className="animate-slide-in [animation-delay:600ms]">
                 <FeatureCard
                   icon={LineChart}
-                  title="Analytics Dashboard"
-                  description="Track your application progress, success rates, and career growth with detailed analytics."
+                  title="Smart Analytics"
+                  description="Track your application progress and success metrics."
                 />
               </div>
             </div>
@@ -153,9 +174,15 @@ export default function LandingPage() {
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="grid gap-8 md:grid-cols-3">
-              <StatCard number="100K+" label="Active Users" icon={BarChart3} />
-              <StatCard number="50+" label="Job Platforms" icon={Globe2} />
-              <StatCard number="95%" label="Success Rate" icon={Sparkles} />
+              <div className="animate-slide-in">
+                <StatCard number="100K+" label="Active Users" icon={BarChart3} />
+              </div>
+              <div className="animate-slide-in [animation-delay:200ms]">
+                <StatCard number="50+" label="Job Platforms" icon={Globe2} />
+              </div>
+              <div className="animate-slide-in [animation-delay:400ms]">
+                <StatCard number="95%" label="Success Rate" icon={Sparkles} />
+              </div>
             </div>
           </div>
         </section>
@@ -172,11 +199,12 @@ export default function LandingPage() {
             </p>
             <div className="animate-slide-in [animation-delay:400ms]">
               <Button
-                size="lg"
-                className="bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-all hover:from-violet-700 hover:to-fuchsia-700"
+              size="lg"
+              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-all hover:from-violet-700 hover:to-fuchsia-700"
+              onClick={() => openModal("register")}
               >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Get Started for Free
+              <Sparkles className="mr-2 h-4 w-4" />
+              Get Started for Free
               </Button>
             </div>
           </div>
@@ -188,6 +216,11 @@ export default function LandingPage() {
           <p>© 2024 JobScout.ai. All rights reserved.</p>
         </div>
       </footer>
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultView={authView}
+      />
     </div>
   )
 }

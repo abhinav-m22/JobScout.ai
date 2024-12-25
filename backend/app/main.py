@@ -8,11 +8,20 @@ from app.routers.snapshot import SnapshotManager
 from sqlalchemy.orm import Session
 from typing import List, Dict
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Job Role Recommendation System",
     version="1.0.0",
     description="Backend for profile collection and job role recommendations"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(users.router, prefix="/users", tags=["Users"])
