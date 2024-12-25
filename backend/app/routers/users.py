@@ -79,7 +79,8 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
             "id": user.id,
             "email": user.email,
             "name": user.name,
-            "access_token": access_token
+            "access_token": access_token,
+            "is_profile_complete": user.is_profile_complete
         }
     except IntegrityError:
         raise HTTPException(
@@ -102,7 +103,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         "id": user.id,
         "email": user.email,
         "name": user.name,
-        "access_token": access_token
+        "access_token": access_token,
+        "is_profile_complete": user.is_profile_complete
     }
 
 @router.post("/auth/logout")
@@ -131,6 +133,7 @@ async def update_profile(
     
     for field, value in profile_data.dict(exclude_unset=True).items():
         setattr(current_user, field, value)
+        current_user.is_profile_complete = True
     
     db.commit()
     db.refresh(current_user)

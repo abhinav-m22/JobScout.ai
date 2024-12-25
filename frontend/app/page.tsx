@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { FeatureCard } from "@/components/feature-card"
 import { StatCard } from "@/components/stat-card"
 import { ChatMessage } from "@/components/chat-message"
+import ProfilePage from "./profile/page"
 
 export default function LandingPage() {
   const { user, logout, isLoading } = useAuth()
@@ -63,7 +64,10 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main>
+      {user ? (
+        <ProfilePage />
+      ) : (
+        <main>
         {/* Hero Section */}
         <section className="relative overflow-hidden py-20 lg:py-32">
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -199,17 +203,18 @@ export default function LandingPage() {
             </p>
             <div className="animate-slide-in [animation-delay:400ms]">
               <Button
-              size="lg"
-              className="bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-all hover:from-violet-700 hover:to-fuchsia-700"
-              onClick={() => openModal("register")}
+                size="lg"
+                className="bg-gradient-to-r from-violet-600 to-fuchsia-600 transition-all hover:from-violet-700 hover:to-fuchsia-700"
+                onClick={() => openModal("register")}
               >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Get Started for Free
+                <Sparkles className="mr-2 h-4 w-4" />
+                Get Started for Free
               </Button>
             </div>
           </div>
         </section>
       </main>
+      )}
 
       <footer className="border-t bg-white/50 py-8 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/50">
         <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-300">

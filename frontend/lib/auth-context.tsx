@@ -7,6 +7,7 @@ interface User {
   email: string
   name: string
   access_token?: string
+  is_profile_complete: boolean
 }
 
 interface AuthContextType {

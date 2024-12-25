@@ -30,6 +30,7 @@ class UserProfile(Base):
     portfolio = Column(String, nullable=True)
     resume_link = Column(String, nullable=True)
     hashed_password = Column(String, nullable=False)
+    is_profile_complete = Column(Boolean, default=False)
 
 class UserRecommendations(Base):
     __tablename__ = "user_recommendations"
@@ -42,11 +43,13 @@ class UserCreate(BaseModel):
     email: str
     password: str
     name: str
+    is_profile_complete: Optional[bool] = False
 
 class UserResponse(BaseModel):
     id: str
     email: str
     name: str
+    is_profile_complete: bool
 
 class UserProfileUpdate(BaseModel):
     name: Optional[str] = None
