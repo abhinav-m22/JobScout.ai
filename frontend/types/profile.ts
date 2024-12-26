@@ -1,3 +1,5 @@
+import { ProfileFormValues } from '@/lib/validations/profile'
+
 export type EmploymentType = 'Full-Time' | 'Part-Time' | 'Contract' | 'Internship' | 'Freelance'
 
 export interface UserProfile {
@@ -23,3 +25,25 @@ export interface UserProfile {
   isProfileComplete: boolean
 }
 
+
+export const initialProfileState: ProfileFormValues = {
+  name: "",
+  email: "",
+  phone: "",
+  location: "",
+  current_title: "",
+  employment_type: "Full-Time",
+  experience_years: 0,
+  current_industry: "",
+  preferred_job_titles: [],
+  preferred_industries: [],
+  salary_expectations: 0,
+  education: "",
+  skills: [],
+  certifications: [],
+  career_goals: "",
+  relocation_willingness: false,
+  linkedin: "",
+  portfolio: "",
+  resume_link: "",
+}

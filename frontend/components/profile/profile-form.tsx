@@ -1,9 +1,10 @@
 "use client"
 
+import React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Loader2 } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
@@ -38,48 +39,82 @@ interface ProfileFormProps {
 }
 
 function transformPayload(payload: ProfileFormValues) {
-    const fieldsToConvert = ["preferred_job_titles", "preferred_industries", "skills", "certifications"];
-    const transformedPayload: { [key: string]: any } = { ...payload };
-
-    fieldsToConvert.forEach(field => {
-        if (Array.isArray(transformedPayload[field])) {
-            transformedPayload[field] = transformedPayload[field].join(", ");
-        }
-    });
-
-    return transformedPayload;
+  return {
+    ...payload,
+    preferred_job_titles: Array.isArray(payload.preferred_job_titles)
+      ? payload.preferred_job_titles.join(', ')
+      : payload.preferred_job_titles,
+    preferred_industries: Array.isArray(payload.preferred_industries)
+      ? payload.preferred_industries.join(', ')
+      : payload.preferred_industries,
+    skills: Array.isArray(payload.skills)
+      ? payload.skills.join(', ')
+      : payload.skills,
+    certifications: Array.isArray(payload.certifications)
+      ? payload.certifications.join(', ')
+      : payload.certifications,
+  };
 }
-
 
 export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
+  const stringToArray = (value: string | string[] | undefined): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    const result = value.split(',').map(item => item.trim()).filter(Boolean);
+    console.log(`Converting ${value} to array:`, result);
+    return result;
+  };
+
+  const transformInitialData = (data: any): Partial<ProfileFormValues> => {
+    if (!data) return {};
+    
+    const transformed = {
+      name: data.name || '',
+      email: data.email || userEmail || '',
+      phone: data.phone || '',
+      location: data.location || '',
+      current_title: data.current_title || '',
+      employment_type: data.employment_type || 'Full-Time',
+      experience_years: Number(data.experience_years) || 0,
+      current_industry: data.current_industry || '',
+      preferred_job_titles: data.preferred_job_titles || '',
+      preferred_industries: data.preferred_industries || '',
+      salary_expectations: Number(data.salary_expectations) || 0,
+      education: data.education || '',
+      skills: data.skills || '',
+      certifications: data.certifications || '',
+      career_goals: data.career_goals || '',
+      relocation_willingness: Boolean(data.relocation_willingness),
+      linkedin: data.linkedin || '',
+      portfolio: data.portfolio || '',
+      resume_link: data.resume_link || '',
+    };
+
+    console.log("Transformed Initial Data:", transformed);
+    return transformed;
+  };
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      email: userEmail,
-      name: initialData?.name || '',
-      phone: initialData?.phone || '',
-      location: initialData?.location || '',
-      current_title: initialData?.current_title || '',
-    //   employmentType: initialData?.employmentType || '',
-      experience_years: initialData?.experience_years || 0,
-      current_industry: initialData?.current_industry || '',
-    //   preferredJobTitles: initialData?.preferredJobTitles?.join(', ') || '',
-    //   preferredIndustries: initialData?.preferredIndustries?.join(', ') || '',
-      salary_expectations: initialData?.salary_expectations || 0,
-      education: initialData?.education || '',
-    //   skills: initialData?.skills?.join(', ') || '',
-    //   certifications: initialData?.certifications?.join(', ') || '',
-      career_goals: initialData?.career_goals || '',
-      relocation_willingness: initialData?.relocation_willingness || false,
-      linkedin: initialData?.linkedin || '',
-      portfolio: initialData?.portfolio || '',
-      resume_link: initialData?.resume_link || '',
-    },
+    defaultValues: transformInitialData(initialData),
   });
-  
+
+  useEffect(() => {
+    console.log("Current Form Values:", form.getValues());
+  }, [form]);
+
+  useEffect(() => {
+    if (initialData) {
+      const transformed = transformInitialData(initialData);
+      Object.entries(transformed).forEach(([key, value]) => {
+        form.setValue(key as keyof ProfileFormValues, value);
+      });
+    }
+  }, [initialData, form]);
+
   const API_URL = 'http://localhost:8000'
 
   async function onSubmit(data: ProfileFormValues) {
@@ -87,9 +122,9 @@ export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps
     try {
       const response = await fetch(`${API_URL}/users/profile/${userId}`, {
         method: 'PATCH',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify(transformPayload(data)),
       })
@@ -315,7 +350,15 @@ export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps
                   <FormItem>
                     <FormLabel>Skills</FormLabel>
                     <FormControl>
-                      <Input placeholder="React, Node.js, TypeScript, Python" {...field} />
+                      <Input
+                        placeholder="React, Node.js, TypeScript, Python"
+                        {...field}
+                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value}
+                        onChange={e => {
+                          const value = e.target.value;
+                          field.onChange(value.split(',').map(item => item.trim()).filter(Boolean));
+                        }}
+                      />
                     </FormControl>
                     <FormDescription>Separate multiple skills with commas</FormDescription>
                     <FormMessage />

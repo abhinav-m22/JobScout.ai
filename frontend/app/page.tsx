@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 import { AuthModal } from "@/components/auth/auth-modal"
-import { BrainCircuit, Globe2, Bot, LineChart, MessageSquareText, BarChart3, Sparkles, Search } from 'lucide-react'
+import { BrainCircuit, Globe2, Bot, LineChart, MessageSquareText, BarChart3, Sparkles, UserCircle2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FeatureCard } from "@/components/feature-card"
@@ -12,6 +13,7 @@ import { ChatMessage } from "@/components/chat-message"
 import ProfilePage from "./profile/page"
 
 export default function LandingPage() {
+  const router = useRouter()
   const { user, logout, isLoading } = useAuth()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authView, setAuthView] = useState<"login" | "register">("login")
@@ -25,6 +27,20 @@ export default function LandingPage() {
 
   const handleStartTrial = () => {
     openModal("register", email)
+  }
+
+  useEffect(() => {
+    if (user) {
+      sessionStorage.setItem('profileSource', 'login')
+      router.push('/profile')
+    }
+  }, [user, router])
+
+  const handleProfileClick = () => {
+    if (user) {
+      sessionStorage.setItem('profileSource', 'icon')
+      router.push('/profile')
+    }
   }
 
   return (
@@ -47,6 +63,13 @@ export default function LandingPage() {
                   onClick={() => logout()}
                 >
                   Log out
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="p-2 hover:bg-violet-500/10 hover:text-violet-600"
+                  onClick={handleProfileClick}
+                >
+                  <UserCircle2 className="h-6 w-6" />
                 </Button>
               </>
             ) : (
