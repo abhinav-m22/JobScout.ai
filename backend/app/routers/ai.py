@@ -5,6 +5,7 @@ from app.db import get_db
 from app.models.user import UserRecommendations 
 from openai import OpenAI
 import os
+from app.models.snapshot import Snapshot
 
 router = APIRouter()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -36,6 +37,7 @@ async def recommend_job_roles(request: AIRequest, db: Session = Depends(get_db))
                 {"role": "user", "content": prompt},
             ]
         )
+        print("Response: ", completion.choices[0].message.content)
 
         recommendations = completion.choices[0].message.content.strip("[]").replace("'", "").replace('"', "").split(", ")
 
@@ -53,6 +55,19 @@ async def recommend_job_roles(request: AIRequest, db: Session = Depends(get_db))
             db.add(new_recommendation)
             db.commit()
             db.refresh(new_recommendation)
+            
+        existing_snapshots = db.query(Snapshot).filter(Snapshot.role.in_(recommendations)).all()
+        if existing_snapshots:
+            for snapshot in existing_snapshots:
+                new_snapshot = Snapshot(
+                    user_id=request.user_id,
+                    role=snapshot.role,
+                    platform=snapshot.platform,
+                    snapshot_id=snapshot.snapshot_id,
+                )
+                db.add(new_snapshot)    
+            db.commit()
+            db.refresh(new_snapshot)
 
         return {"user_id": request.user_id, "recommendations": recommendations}
     except Exception as e:

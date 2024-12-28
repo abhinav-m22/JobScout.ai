@@ -10,6 +10,8 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import uuid
 from sqlalchemy.exc import IntegrityError
+from app.routers.ai import recommend_job_roles
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -121,6 +123,10 @@ async def get_profile(user_id: str, current_user: UserProfile = Depends(get_curr
         raise HTTPException(status_code=403, detail="Not authorized to view this profile")
     return current_user
 
+class AIRequest(BaseModel):
+    user_id: str
+    user_profile: dict
+
 @router.patch("/profile/{user_id}")
 async def update_profile(
     user_id: str,
@@ -137,4 +143,22 @@ async def update_profile(
     
     db.commit()
     db.refresh(current_user)
+    
+    if current_user.is_profile_complete:
+        user_profile_dict = {
+            "name": current_user.name,
+            "skills": current_user.skills,
+            "experience": current_user.experience_years,
+            "education": current_user.education,
+            "certifications": current_user.certifications,
+            "location": current_user.location,
+            "desired_role": current_user.preferred_job_titles
+        }
+        await recommend_job_roles(
+            request=AIRequest(
+                user_profile=user_profile_dict,
+                user_id=current_user.id
+            ),
+            db=db
+        )
     return current_user
