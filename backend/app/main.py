@@ -14,6 +14,7 @@ import json
 from openai import OpenAI
 import pdfplumber
 import os
+from app.models.user import UserRecommendations
 
 app = FastAPI(
     title="Job Role Recommendation System",
@@ -123,3 +124,10 @@ async def upload_resume(file: UploadFile = File(...), userId: str = None):
     except Exception as e:
         print("Error processing resume:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/roles/{user_id}")
+async def get_user_roles(user_id: str, db: Session = Depends(get_db)):
+    # load the user recommendations model
+    user_recommendations = db.query(UserRecommendations).filter(UserRecommendations.user_id == user_id).first()
+    if user_recommendations:
+        return user_recommendations.recommendations
