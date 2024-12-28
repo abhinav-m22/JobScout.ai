@@ -41,18 +41,26 @@ interface ProfileFormProps {
 function transformPayload(payload: ProfileFormValues) {
   return {
     ...payload,
-    preferred_job_titles: Array.isArray(payload.preferred_job_titles)
-      ? payload.preferred_job_titles.join(', ')
-      : payload.preferred_job_titles,
-    preferred_industries: Array.isArray(payload.preferred_industries)
-      ? payload.preferred_industries.join(', ')
-      : payload.preferred_industries,
-    skills: Array.isArray(payload.skills)
-      ? payload.skills.join(', ')
-      : payload.skills,
-    certifications: Array.isArray(payload.certifications)
-      ? payload.certifications.join(', ')
-      : payload.certifications,
+    // Transform array fields to comma-separated strings or empty strings if array is empty
+    skills: Array.isArray(payload.skills) 
+      ? payload.skills.join(', ') 
+      : payload.skills || '',
+      
+    certifications: Array.isArray(payload.certifications) 
+      ? payload.certifications.join(', ') 
+      : payload.certifications || '',
+      
+    preferred_job_titles: Array.isArray(payload.preferred_job_titles) 
+      ? payload.preferred_job_titles.join(', ') 
+      : payload.preferred_job_titles || '',
+      
+    preferred_industries: Array.isArray(payload.preferred_industries) 
+      ? payload.preferred_industries.join(', ') 
+      : payload.preferred_industries || '',
+      
+    education: Array.isArray(payload.education)
+      ? payload.education.join('\n')
+      : payload.education || ''
   };
 }
 
@@ -70,32 +78,45 @@ export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps
 
   const transformInitialData = (data: any): Partial<ProfileFormValues> => {
     if (!data) return {};
-    
-    const transformed = {
+
+    return {
+      // Required fields
       name: data.name || '',
       email: data.email || userEmail || '',
       phone: data.phone || '',
       location: data.location || '',
       current_title: data.current_title || '',
-      employment_type: data.employment_type || 'Full-Time',
-      experience_years: Number(data.experience_years) || 0,
       current_industry: data.current_industry || '',
-      preferred_job_titles: data.preferred_job_titles || '',
-      preferred_industries: data.preferred_industries || '',
-      salary_expectations: Number(data.salary_expectations) || 0,
+      experience_years: Number(data.experience_years) || 0,
+
+      // Optional fields
+      employment_type: data.employment_type || undefined,
+      preferred_job_titles: Array.isArray(data.preferred_job_titles)
+        ? data.preferred_job_titles.join(', ')
+        : data.preferred_job_titles || '',
+      preferred_industries: Array.isArray(data.preferred_industries)
+        ? data.preferred_industries.join(', ')
+        : data.preferred_industries || '',
+      salary_expectations: data.salary_expectations ? Number(data.salary_expectations) : undefined,
       education: data.education || '',
-      skills: data.skills || '',
-      certifications: data.certifications || '',
+      skills: Array.isArray(data.skills)
+        ? data.skills.join(', ')
+        : data.skills || '',
+      certifications: Array.isArray(data.certifications)
+        ? data.certifications.join(', ')
+        : data.certifications || '',
       career_goals: data.career_goals || '',
-      relocation_willingness: Boolean(data.relocation_willingness),
+      relocation_willingness: data.relocation_willingness === undefined ? false : Boolean(data.relocation_willingness),
       linkedin: data.linkedin || '',
       portfolio: data.portfolio || '',
       resume_link: data.resume_link || '',
+      education: Array.isArray(data.education)
+        ? data.education.join('\n')
+        : data.education || '',
     };
-
-    console.log("Transformed Initial Data:", transformed);
-    return transformed;
   };
+
+
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -120,22 +141,27 @@ export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true)
     try {
+      // Transform the data before sending to API
+      const transformedData = transformPayload(data);
+      
       const response = await fetch(`${API_URL}/users/profile/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
-        body: JSON.stringify(transformPayload(data)),
+        body: JSON.stringify(transformedData),
       })
-
+  
       if (!response.ok) {
-        throw new Error('Failed to update profile')
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update profile');
       }
-
+  
       toast.success('Profile updated successfully')
       router.push('/dashboard')
     } catch (error) {
+      console.error('Submit error:', error);
       toast.error('Something went wrong. Please try again.')
     } finally {
       setIsLoading(false)
@@ -337,8 +363,13 @@ export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps
                       <Textarea
                         placeholder="Bachelor's in Computer Science, University Name, 2020"
                         {...field}
+                        value={Array.isArray(field.value) ? field.value.join('\n') : field.value}
+                        onChange={(e) => {
+                          field.onChange(e.target.value);
+                        }}
                       />
                     </FormControl>
+                    <FormDescription>Enter each education detail on a new line</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -353,10 +384,11 @@ export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps
                       <Input
                         placeholder="React, Node.js, TypeScript, Python"
                         {...field}
-                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value}
-                        onChange={e => {
-                          const value = e.target.value;
-                          field.onChange(value.split(',').map(item => item.trim()).filter(Boolean));
+                        // Only use join if it's an array
+                        value={typeof field.value === 'string' ? field.value : field.value?.join(', ')}
+                        onChange={(e) => {
+                          // Just pass the string value, let the schema handle the transformation
+                          field.onChange(e.target.value);
                         }}
                       />
                     </FormControl>

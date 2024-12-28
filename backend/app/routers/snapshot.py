@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import Depends, HTTPException, APIRouter, Query
 from sqlalchemy.orm import Session
 import logging
 import time
@@ -335,26 +335,43 @@ def get_s3_json_data(url: str) -> dict:
     
 
 @router.get("/{user_id}")
-def get_snapshots(user_id: str, db: Session = Depends(get_db)) -> List[dict]:
+def get_snapshots(
+    user_id: str,
+    page: int = Query(1, ge=1),
+    limit: int = Query(12, ge=1, le=100),
+    db: Session = Depends(get_db)
+) -> dict:
     """
-    Fetch snapshots for a user and return signed URLs and JSON data from S3.
+    Fetch paginated snapshots for a user and return signed URLs and JSON data from S3.
 
     Args:
         user_id (str): The ID of the user.
+        page (int): Page number (1-based).
+        limit (int): Number of items per page.
         db (Session): The database session.
 
     Returns:
-        List[dict]: List of snapshots with signed URLs and JSON data.
+        dict: Paginated response with items and total count.
     """
-    snapshots = db.query(Snapshot).filter(Snapshot.user_id == user_id).all()
-    print(f"Snapshots: {snapshots}")
-    if not snapshots:
+    # Calculate offset
+    offset = (page - 1) * limit
+    
+    # Get total count
+    total = db.query(Snapshot).filter(Snapshot.user_id == user_id).count()
+    
+    # Get paginated snapshots
+    snapshots = db.query(Snapshot)\
+        .filter(Snapshot.user_id == user_id)\
+        .offset(offset)\
+        .limit(limit)\
+        .all()
+
+    if not snapshots and page == 1:
         raise HTTPException(status_code=404, detail="No snapshots found for the user.")
 
     s3_bucket = os.getenv("S3_BUCKET")
-    response = []
+    items = []
     
-    # Map for preserving original platform names in the response
     platform_map = {
         "LinkedIn": "LinkedIn",
         "Glassdoor": "Glassdoor",
@@ -362,38 +379,32 @@ def get_snapshots(user_id: str, db: Session = Depends(get_db)) -> List[dict]:
     }
     
     for snapshot in snapshots:
-        # Keep original platform name for the response
         platform = platform_map.get(snapshot.platform, snapshot.platform)
-        
-        # Use lowercase for the S3 path
         role_slug = snapshot.role.replace(" ", "%20")
-        # platform_slug = snapshot.platform.lower()  # Ensure lowercase for S3 path
         BUCKET = os.getenv("S3_BUCKET")
         REGION = os.getenv("AWS_REGION")
         s3_path = f"https://{BUCKET}.s3.{REGION}.amazonaws.com/{platform}/{role_slug}/{snapshot.snapshot_id}.json"
         
-        # Generate signed URL
-        # signed_url = generate_signed_url(s3_bucket, s3_path)
-        
-        # Fetch JSON data from S3
         json_data = get_s3_json_data(s3_path)
         
-        # Build response object with original platform name
         snapshot_data = {
             "snapshot_id": snapshot.snapshot_id,
-            "platform": platform,  # Original platform name
+            "platform": platform,
             "role": snapshot.role,
-            "signed_url": s3_path  # Signed URL,
+            "signed_url": s3_path
         }
         
-        # Add JSON data if successfully retrieved
         if json_data:
-            # include 2 entries for each snapshot
             snapshot_data["data"] = json_data
         else:
             snapshot_data["data"] = None
             print(f"Failed to fetch data for snapshot {snapshot.snapshot_id}")
         
-        response.append(snapshot_data)
+        items.append(snapshot_data)
 
-    return response
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "limit": limit
+    }

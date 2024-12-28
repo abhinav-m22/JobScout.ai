@@ -125,6 +125,9 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Search } from 'lucide-react'
 import type { JobListing } from "@/types/jobs"
+import { Button } from "@/components/ui/button"
+
+const ITEMS_PER_PAGE = 12
 
 export default function DashboardPage() {
     const { user } = useAuth()
@@ -134,16 +137,26 @@ export default function DashboardPage() {
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
     const [error, setError] = useState<string | null>(null)
     const platforms = ["All", "Glassdoor", "LinkedIn", "Indeed"];
+    const [page, setPage] = useState(1)
+    const [hasMore, setHasMore] = useState(true)
 
-    const fetchJobs = useCallback(async () => {
+    const fetchJobs = useCallback(async (pageNum: number) => {
         if (!user?.id) return
 
         try {
-            const response = await fetch(`http://localhost:8000/snapshots/${user.id}`)
+            setIsLoading(true)
+            const response = await fetch(
+                `http://localhost:8000/snapshots/${user.id}?page=${pageNum}&limit=${ITEMS_PER_PAGE}`
+            )
             if (!response.ok) throw new Error('Failed to fetch jobs')
 
             const data = await response.json()
-            setJobs(data)
+            if (pageNum === 1) {
+                setJobs(data.items)
+            } else {
+                setJobs(prev => [...prev, ...data.items])
+            }
+            setHasMore(data.total > pageNum * ITEMS_PER_PAGE)
         } catch (err) {
             setError('Failed to load jobs. Please try again later.')
         } finally {
@@ -152,12 +165,14 @@ export default function DashboardPage() {
     }, [user?.id])
 
     useEffect(() => {
-        fetchJobs()
+        fetchJobs(1)
     }, [fetchJobs])
 
     const filteredJobs = useMemo(() =>
         jobs.filter(job => {
-            const matchesPlatform = selectedPlatforms.length === 0 || selectedPlatforms.includes("All") || selectedPlatforms.includes(job.platform)
+            const matchesPlatform = selectedPlatforms.length === 0 || 
+                                  selectedPlatforms.includes("All") || 
+                                  selectedPlatforms.includes(job.platform)
             const matchesSearch = searchQuery === "" ||
                 job.data.some(listing =>
                     listing.job_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -166,6 +181,11 @@ export default function DashboardPage() {
             return matchesPlatform && matchesSearch
         }), [jobs, selectedPlatforms, searchQuery]
     )
+
+    const handleLoadMore = () => {
+        setPage(prev => prev + 1)
+        fetchJobs(page + 1)
+    }
 
     const handlePlatformChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const value = event.target.value
@@ -207,7 +227,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {isLoading ? (
+                {isLoading && page === 1 ? (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {Array.from({ length: 6 }).map((_, i) => (
                             <div key={i} className="space-y-4 rounded-lg border p-4">
@@ -229,17 +249,31 @@ export default function DashboardPage() {
                         No jobs found matching your criteria.
                     </div>
                 ) : (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {filteredJobs.flatMap(listing =>
-                            listing.data.map((job, index) => (
-                                <JobCard
-                                    key={`${listing.snapshot_id}-${index}`}
-                                    job={job}
-                                    platform={listing.platform}
-                                />
-                            ))
+                    <>
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {filteredJobs.flatMap(listing =>
+                                listing.data.map((job, index) => (
+                                    <JobCard
+                                        key={`${listing.snapshot_id}-${index}`}
+                                        job={job}
+                                        platform={listing.platform}
+                                    />
+                                ))
+                            )}
+                        </div>
+                        
+                        {hasMore && (
+                            <div className="mt-8 flex justify-center">
+                                <Button
+                                    onClick={handleLoadMore}
+                                    disabled={isLoading}
+                                    className="w-full sm:w-auto"
+                                >
+                                    {isLoading ? "Loading..." : "Load More Jobs"}
+                                </Button>
+                            </div>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
         </div>
