@@ -254,7 +254,7 @@ function ProfileContent() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push('/login')
+      router.push('/')
       return
     }
 

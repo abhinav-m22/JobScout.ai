@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { InteractiveRolesLoader } from "@/components/jobs/interactive-loader"
 import { Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Navbar } from "@/components/navbar"
 
 const ITEMS_PER_PAGE = 12
 
@@ -107,6 +108,7 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50">
+            <Navbar />
             <div className="container py-10">
                 <div className="mb-8 space-y-4">
                     <h1 className="text-3xl font-bold">Job Listings</h1>
