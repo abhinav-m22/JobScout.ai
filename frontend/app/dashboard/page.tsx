@@ -29,11 +29,19 @@ export default function DashboardPage() {
     const [recommendedRoles, setRecommendedRoles] = useState<string[]>([])
     const [rolesError, setRolesError] = useState<string | null>(null)
 
+    const ENV = process.env.NODE_ENV
+    var API_URL = ""
+    if (ENV === "development") {
+        API_URL = "http://localhost:8000"
+    } else {
+        API_URL = "https://jobscout-ai.onrender.com"
+    }
+
     const fetchRecommendedRoles = useCallback(async () => {
         if (!user?.id) return
 
         try {
-            const response = await fetch(`http://localhost:8000/roles/${user.id}`)
+            const response = await fetch(`${API_URL}/roles/${user.id}`)
             if (!response.ok) throw new Error('Failed to fetch recommended roles')
 
             const roles = await response.json()
@@ -49,7 +57,7 @@ export default function DashboardPage() {
         try {
             setIsLoading(true)
             const response = await fetch(
-                `http://localhost:8000/snapshots/${user.id}?page=${pageNum}&limit=${ITEMS_PER_PAGE}`
+                `${API_URL}/snapshots/${user.id}?page=${pageNum}&limit=${ITEMS_PER_PAGE}`
             )
             if (!response.ok) throw new Error('Failed to fetch jobs')
 

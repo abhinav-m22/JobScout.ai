@@ -216,9 +216,17 @@ function ProfileContent() {
     if (user?.id) {
       formData.append('userId', user.id)
     }
+
+    const ENV = process.env.NODE_ENV
+    var API_URL = ""
+    if (ENV === "development") {
+        API_URL = "http://localhost:8000"
+    } else {
+        API_URL = "https://jobscout-ai.onrender.com"
+    }
   
     try {
-      const response = await fetch('http://localhost:8000/resume/upload', {
+      const response = await fetch(`${API_URL}/resume/upload`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${user?.access_token}`,
@@ -263,8 +271,16 @@ function ProfileContent() {
       setShowForm(!isProfileComplete || source === 'icon')
     }
 
+    const ENV = process.env.NODE_ENV
+    var API_URL = ""
+    if (ENV === "development") {
+        API_URL = "http://localhost:8000"
+    } else {
+        API_URL = "https://jobscout-ai.onrender.com"
+    }
+
     if (source === 'icon') {
-      fetch(`http://localhost:8000/users/profile/${user?.id}`, {
+      fetch(`${API_URL}/users/profile/${user?.id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -40,7 +40,13 @@ interface UserProfile {
   resume_link?: string
 }
 
-const API_URL ='http://localhost:8000'
+const ENV = process.env.NODE_ENV
+var API_URL = ""
+if (ENV === "development") {
+  API_URL = "http://localhost:8000"
+} else {
+  API_URL = "https://jobscout-ai.onrender.com"
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -132,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
         },
       })
-      
+
       localStorage.removeItem('access_token')
       setUser(null)
     } catch (error) {
@@ -168,13 +174,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      register, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      login,
+      register,
+      logout,
       isLoading,
-      updateProfile 
+      updateProfile
     }}>
       {children}
     </AuthContext.Provider>

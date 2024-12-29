@@ -42,22 +42,22 @@ function transformPayload(payload: ProfileFormValues) {
   return {
     ...payload,
     // Transform array fields to comma-separated strings or empty strings if array is empty
-    skills: Array.isArray(payload.skills) 
-      ? payload.skills.join(', ') 
+    skills: Array.isArray(payload.skills)
+      ? payload.skills.join(', ')
       : payload.skills || '',
-      
-    certifications: Array.isArray(payload.certifications) 
-      ? payload.certifications.join(', ') 
+
+    certifications: Array.isArray(payload.certifications)
+      ? payload.certifications.join(', ')
       : payload.certifications || '',
-      
-    preferred_job_titles: Array.isArray(payload.preferred_job_titles) 
-      ? payload.preferred_job_titles.join(', ') 
+
+    preferred_job_titles: Array.isArray(payload.preferred_job_titles)
+      ? payload.preferred_job_titles.join(', ')
       : payload.preferred_job_titles || '',
-      
-    preferred_industries: Array.isArray(payload.preferred_industries) 
-      ? payload.preferred_industries.join(', ') 
+
+    preferred_industries: Array.isArray(payload.preferred_industries)
+      ? payload.preferred_industries.join(', ')
       : payload.preferred_industries || '',
-      
+
     education: Array.isArray(payload.education)
       ? payload.education.join('\n')
       : payload.education || ''
@@ -136,14 +136,20 @@ export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps
     }
   }, [initialData, form]);
 
-  const API_URL = 'http://localhost:8000'
+  const ENV = process.env.NODE_ENV
+  var API_URL = ""
+  if (ENV === "development") {
+    API_URL = "http://localhost:8000"
+  } else {
+    API_URL = "https://jobscout-ai.onrender.com"
+  }
 
   async function onSubmit(data: ProfileFormValues) {
     setIsLoading(true)
     try {
       // Transform the data before sending to API
       const transformedData = transformPayload(data);
-      
+
       const response = await fetch(`${API_URL}/users/profile/${userId}`, {
         method: 'PATCH',
         headers: {
@@ -152,12 +158,12 @@ export function ProfileForm({ initialData, userEmail, userId }: ProfileFormProps
         },
         body: JSON.stringify(transformedData),
       })
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Failed to update profile');
       }
-  
+
       toast.success('Profile updated successfully')
       router.push('/dashboard')
     } catch (error) {
