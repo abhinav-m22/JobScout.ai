@@ -45,6 +45,11 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-100 via-white to-fuchsia-100 dark:from-gray-900 dark:via-gray-900 dark:to-violet-900/20">
+      <div className="w-full bg-gradient-to-r from-amber-50 via-amber-100 to-amber-50 dark:from-amber-900/20 dark:via-amber-800/20 dark:to-amber-900/20 p-2">
+        <p className="text-center text-sm text-amber-800 dark:text-amber-200 animate-fade-in">
+          ⚠️ Demo Version: Limited API credits available. Some features may be restricted on this deployment.
+        </p>
+      </div>
       <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm transition-colors dark:border-gray-800 dark:bg-gray-900/80">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2 animate-slide-in">

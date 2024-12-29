@@ -23,6 +23,11 @@ export function Navbar({ showAuthModal }: NavbarProps) {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm transition-colors dark:border-gray-800 dark:bg-gray-900/80">
+      <div className="w-full bg-gradient-to-r from-amber-50 via-amber-100 to-amber-50 dark:from-amber-900/20 dark:via-amber-800/20 dark:to-amber-900/20 p-2">
+        <p className="text-center text-sm text-amber-800 dark:text-amber-200 animate-fade-in">
+          ⚠️ Demo Version: Limited API credits available. Some features may be restricted on this deployment.
+        </p>
+      </div>
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-2 animate-slide-in cursor-pointer" onClick={() => router.push('/')}>
           <BrainCircuit className="h-8 w-8 text-violet-600 dark:text-violet-400" />
