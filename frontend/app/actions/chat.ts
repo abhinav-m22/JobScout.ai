@@ -29,12 +29,13 @@ export async function chat(
       model: 'gpt-4',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        ...messages,
+        // ...messages,
       ],
       temperature: 0.7,
     })
 
-    return { content: response.choices[0].message.content }
+    // return { content: response.choices[0].message.content }
+    return { content: response.choices[0].message.content ?? '' }
   } catch (error) {
     console.error('Chat API error:', error)
     return { content: '', error: 'Failed to process chat request' }
