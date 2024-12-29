@@ -5,7 +5,8 @@ import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { BrainCircuit, UserCircle2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-
+import { MessageSquare } from 'lucide-react'
+import Link from 'next/link'
 interface NavbarProps {
   showAuthModal?: (view: "login" | "register") => void
 }
@@ -32,6 +33,13 @@ export function Navbar({ showAuthModal }: NavbarProps) {
             <div className="h-10 w-20 animate-pulse rounded bg-gray-200" />
           ) : user ? (
             <>
+              <Link
+                href="/chat"
+                className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-violet-600 dark:text-gray-300 dark:hover:text-violet-400"
+              >
+                <MessageSquare className="h-4 w-4" />
+                AI Assistant
+              </Link>
               <span className="text-sm text-gray-600">Welcome, {user.name}</span>
               <Button
                 variant="ghost"
