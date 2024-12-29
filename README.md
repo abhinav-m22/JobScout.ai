@@ -141,10 +141,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-## Contact
-
-For any queries or feedback, please contact: [email@example.com](mailto:email@example.com)
-
----
-
 **Transform your job search with JobScout.ai!**
