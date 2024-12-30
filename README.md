@@ -76,7 +76,7 @@ flowchart TD
 ## Screenshots
 
 ### Platform
-![Screenshot from 2024-12-25 12-42-25](https://github.com/user-attachments/assets/92930142-d02f-49b6-8511-bb7c6f4cb7bc)
+![Screenshot from 2024-12-30 12-54-17](https://github.com/user-attachments/assets/831d8e06-b261-429e-87e5-79b015bc419a)
 
 ### Dashboard
 ![Screenshot from 2024-12-29 17-40-43](https://github.com/user-attachments/assets/6c639964-5fb2-4812-acb6-f255c5a6959f)
