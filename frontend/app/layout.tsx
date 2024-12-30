@@ -1,6 +1,7 @@
 import { AuthProvider } from "@/lib/auth-context"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import "./globals.css"
+import { Analytics } from "@vercel/analytics/react"
 
 export default function RootLayout({
 children,
@@ -13,6 +14,7 @@ return (
       <AuthProvider>
         <TooltipProvider>
           {children}
+          <Analytics />
         </TooltipProvider>
       </AuthProvider>
     </body>
